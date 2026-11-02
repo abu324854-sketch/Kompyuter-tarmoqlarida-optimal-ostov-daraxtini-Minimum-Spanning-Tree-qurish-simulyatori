@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimal Ostov Daraxti (MST) Simulyatori</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            background-color: #1e293b;
+            border-radius: 0.75rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header / Nav -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-network-wired text-indigo-500 text-3xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold text-white leading-tight">Kompyuter Tarmoqlarida Optimal Ostov Daraxti (MST) Simulyatori</h1>
+                    <p class="text-xs text-slate-400">Prim va Kruskal algoritmlari asosida eng kam xarajatli kabel tarmoqlarini loyihalash</p>
+                </div>
+            </div>
+            <!-- Authors Info -->
+            <div class="flex items-center space-x-3 bg-slate-800/80 border border-slate-700 px-4 py-2 rounded-xl">
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Loyiha Mualliflari</span>
+                    <span class="text-xs text-indigo-300 font-bold block">Jo'rayev Xusniddin Xusanboy o'g'li</span>
+                    <span class="text-xs text-emerald-400 font-bold block">Fattoxov Abdulloh</span>
+                </div>
+                <div class="h-8 w-[1px] bg-slate-700"></div>
+                <i class="fa-solid fa-user-gear text-indigo-400 text-lg"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- Control Panel (Left Column) -->
+        <div class="lg:col-span-1 space-y-5">
+            
+            <!-- Mode Selection -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 backdrop-blur space-y-3">
+                <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i> Interaktiv Rejimlar
+                </h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="mode-add-node" onclick="setMode('add-node')" class="p-2.5 text-xs font-medium rounded-lg bg-indigo-600 text-white flex flex-col items-center gap-1 transition">
+                        <i class="fa-solid fa-server text-sm"></i>
+                        <span>Tugun qo'shish</span>
+                    </button>
+                    <button id="mode-add-edge" onclick="setMode('add-edge')" class="p-2.5 text-xs font-medium rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex flex-col items-center gap-1 transition">
+                        <i class="fa-solid fa-diagram-project text-sm"></i>
+                        <span>Kabel ulanishi</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="mode-move" onclick="setMode('move')" class="p-2.5 text-xs font-medium rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex flex-col items-center gap-1 transition">
+                        <i class="fa-solid fa-up-down-left-right text-sm"></i>
+                        <span>Ko'chirish</span>
+                    </button>
+                    <button id="mode-delete" onclick="setMode('delete')" class="p-2.5 text-xs font-medium rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex flex-col items-center gap-1 transition">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                        <span>O'chirish</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Topologies & File IO -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 backdrop-blur space-y-3">
+                <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-cubes text-indigo-400"></i> Tayyor Shablonlar & Fayl
+                </h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="generateRandomGraph(6)" class="px-2.5 py-2 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition">6 ta Server</button>
+                    <button onclick="generateRandomGraph(10)" class="px-2.5 py-2 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition">10 ta Bino</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="exportGraphJSON()" class="px-2.5 py-1.5 text-xs bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 rounded-lg transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-download"></i> Eksport (JSON)
+                    </button>
+                    <button onclick="clearGraph()" class="px-2.5 py-1.5 text-xs bg-rose-900/40 hover:bg-rose-800/60 text-rose-300 border border-rose-700/50 rounded-lg transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> Tozalash
+                    </button>
+                </div>
+            </div>
+
+            <!-- Algorithmic Control -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 backdrop-blur space-y-3.5">
+                <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-gears text-indigo-400"></i> Algoritm va Boshqaruv
+                </h2>
+                
+                <div>
+                    <label class="text-[11px] text-slate-400 mb-1 block">Algoritm turi:</label>
+                    <select id="algorithm-select" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="kruskal">Kruskal Algoritmi (Qirralar saralash)</option>
+                        <option value="prim">Prim Algoritmi (Lokal kengayish)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>Animatsiya tezligi:</span>
+                        <span id="speed-label" class="text-indigo-400 font-bold">1x</span>
+                    </div>
+                    <input type="range" id="speed-range" min="1" max="5" value="2" class="w-full accent-indigo-500 bg-slate-900 rounded-lg">
+                </div>
+
+                <div class="pt-1 space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-run" onclick="runSimulation()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg shadow-lg shadow-emerald-900/30 transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-play"></i> Boshlash
+                        </button>
+                        <button id="btn-pause" onclick="pauseSimulation()" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs rounded-lg transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-pause"></i> Pauza
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-step" onclick="stepNext()" class="px-3 py-2 bg-indigo-700 hover:bg-indigo-600 text-white font-medium text-xs rounded-lg transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-forward-step"></i> 1 Qadam
+                        </button>
+                        <button id="btn-reset" onclick="resetSimulation()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium text-xs rounded-lg transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-rotate-right"></i> Qayta o'rnatish
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial & Metrik Panel -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 backdrop-blur space-y-2.5">
+                <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-indigo-400"></i> Metrika va Xarajat Hisobi
+                </h2>
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex justify-between p-2 bg-slate-900/60 rounded border border-slate-800">
+                        <span class="text-slate-400">Jami tugunlar (V):</span>
+                        <span id="stat-nodes" class="font-semibold text-white">0</span>
+                    </div>
+                    <div class="flex justify-between p-2 bg-slate-900/60 rounded border border-slate-800">
+                        <span class="text-slate-400">Mavjud qirralar (E):</span>
+                        <span id="stat-edges" class="font-semibold text-white">0</span>
+                    </div>
+                    <div class="flex justify-between p-2 bg-slate-900/60 rounded border border-slate-800">
+                        <span class="text-slate-400">MST qirralari (V-1):</span>
+                        <span id="stat-mst-edges" class="font-semibold text-indigo-400">0</span>
+                    </div>
+                    <div class="flex justify-between p-2 bg-slate-900/60 rounded border border-slate-800">
+                        <span class="text-slate-400">Jami kabel masofasi:</span>
+                        <span id="stat-mst-cost" class="font-bold text-emerald-400">0 m</span>
+                    </div>
+                    <div class="flex justify-between p-2 bg-indigo-950/60 rounded border border-indigo-800/60">
+                        <span class="text-indigo-300 font-medium">Taxminiy loyiha byudjeti (1m = $2):</span>
+                        <span id="stat-mst-price" class="font-bold text-amber-300">$0</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Canvas and Execution Logs (Right Column) -->
+        <div class="lg:col-span-3 space-y-6 flex flex-col">
+            
+            <!-- Canvas Container -->
+            <div class="relative bg-slate-900/50 p-2 rounded-2xl border border-slate-800 shadow-2xl flex-1 min-h-[480px]">
+                <canvas id="networkCanvas" class="w-full h-full min-h-[480px] cursor-pointer"></canvas>
+                
+                <!-- Legend Overlay -->
+                <div class="absolute bottom-4 left-4 bg-slate-900/90 border border-slate-700/80 p-3 rounded-lg text-xs space-y-2 backdrop-blur pointer-events-none">
+                    <div class="font-semibold text-slate-300 mb-1 border-b border-slate-800 pb-1">Shartli belgilar:</div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-indigo-500 inline-block border border-indigo-300"></span>
+                        <span class="text-slate-300">Server / Bino (Tugun)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-0.5 bg-slate-500 inline-block"></span>
+                        <span class="text-slate-300">Mavjud ulanish kabeli</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-1 bg-emerald-400 inline-block rounded"></span>
+                        <span class="text-emerald-400 font-medium">MST (Optimal tanlangan kabel)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-1 bg-amber-400 inline-block rounded"></span>
+                        <span class="text-amber-400 font-medium">Tahlil qilinayotgan kabel</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Execution Steps Log -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 backdrop-blur flex-1 flex flex-col min-h-[220px]">
+                <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-terminal text-indigo-400 mr-1.5"></i> Algoritm Loglari va Bosqichma-bosqich Bajarilish</span>
+                    <span id="step-counter" class="text-xs text-indigo-400 font-normal">Qadam: 0/0</span>
+                </h2>
+                <div id="log-container" class="flex-1 bg-slate-950/90 border border-slate-900 rounded-lg p-3 font-mono text-xs text-slate-300 space-y-1.5 overflow-y-auto max-h-48 custom-scrollbar">
+                    <p class="text-slate-500 italic">Dastur ishga tushishga tayyor. Graflarni hosil qiling va "Boshlash" tugmasini bosing...</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer with Full Authorship -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-400 mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center px-4 gap-2">
+            <div>
+                <p class="font-medium text-slate-300">Kompyuter Tarmoqlarida Optimal Ostov Daraxti (MST) Simulyatori</p>
+                <p class="text-[11px] text-slate-500">Toshkent Menejment va Iqtisodiyot Instituti — Kompyuter Muhandisligi</p>
+            </div>
+            <div class="text-right">
+                <p><span class="text-slate-500">Loyiha Mualliflari:</span> <strong class="text-indigo-400">Jo'rayev Xusniddin Xusanboy o'g'li</strong> & <strong class="text-emerald-400">Fattoxov Abdulloh</strong></p>
+                <p class="text-[10px] text-slate-500">&copy; 2026 Barcha huquqlar himoyalangan.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Core -->
+    <script>
+        const canvas = document.getElementById('networkCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // State Core
+        let nodes = [];
+        let edges = [];
+        let mode = 'add-node';
+        let selectedNodeForEdge = null;
+        let draggedNode = null;
+        let animationSteps = [];
+        let currentStepIndex = -1;
+        let isAnimating = false;
+        let isPaused = false;
+        let animationTimer = null;
+        let speed = 1000;
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width - 16;
+            canvas.height = Math.max(480, rect.height - 16);
+            draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function setMode(newMode) {
+            mode = newMode;
+            selectedNodeForEdge = null;
+            ['add-node', 'add-edge', 'move', 'delete'].forEach(m => {
+                const btn = document.getElementById(`mode-${m}`);
+                if (m === mode) {
+                    btn.className = "p-2.5 text-xs font-medium rounded-lg bg-indigo-600 text-white flex flex-col items-center gap-1 transition shadow-lg shadow-indigo-900/40";
+                } else {
+                    btn.className = "p-2.5 text-xs font-medium rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex flex-col items-center gap-1 transition";
+                }
+            });
+            draw();
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const clickedNode = nodes.find(n => Math.hypot(n.x - x, n.y - y) <= 22);
+
+            if (mode === 'add-node') {
+                if (!clickedNode) {
+                    const name = String.fromCharCode(65 + (nodes.length % 26)) + (nodes.length >= 26 ? Math.floor(nodes.length / 26) : '');
+                    nodes.push({ id: Date.now(), name, x, y });
+                    updateStats();
+                    draw();
+                }
+            } else if (mode === 'add-edge') {
+                if (clickedNode) {
+                    if (!selectedNodeForEdge) {
+                        selectedNodeForEdge = clickedNode;
+                    } else if (selectedNodeForEdge.id !== clickedNode.id) {
+                        const exists = edges.some(e => 
+                            (e.u.id === selectedNodeForEdge.id && e.v.id === clickedNode.id) ||
+                            (e.u.id === clickedNode.id && e.v.id === selectedNodeForEdge.id)
+                        );
+                        if (!exists) {
+                            const weight = Math.round(Math.hypot(selectedNodeForEdge.x - clickedNode.x, selectedNodeForEdge.y - clickedNode.y) / 5);
+                            edges.push({ id: Date.now(), u: selectedNodeForEdge, v: clickedNode, weight });
+                            updateStats();
+                        }
+                        selectedNodeForEdge = null;
+                    }
+                    draw();
+                } else {
+                    selectedNodeForEdge = null;
+                    draw();
+                }
+            } else if (mode === 'move') {
+                if (clickedNode) draggedNode = clickedNode;
+            } else if (mode === 'delete') {
+                if (clickedNode) {
+                    nodes = nodes.filter(n => n.id !== clickedNode.id);
+                    edges = edges.filter(e => e.u.id !== clickedNode.id && e.v.id !== clickedNode.id);
+                    updateStats();
+                    draw();
+                } else {
+                    const clickedEdgeIndex = edges.findIndex(e => isPointNearSegment({x, y}, e.u, e.v, 8));
+                    if (clickedEdgeIndex !== -1) {
+                        edges.splice(clickedEdgeIndex, 1);
+                        updateStats();
+                        draw();
+                    }
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (mode === 'move' && draggedNode) {
+                const rect = canvas.getBoundingClientRect();
+                draggedNode.x = e.clientX - rect.left;
+                draggedNode.y = e.clientY - rect.top;
+                edges.forEach(edge => {
+                    if (edge.u.id === draggedNode.id || edge.v.id === draggedNode.id) {
+                        edge.weight = Math.round(Math.hypot(edge.u.x - edge.v.x, edge.u.y - edge.v.y) / 5);
+                    }
+                });
+                draw();
+            }
+        });
+
+        window.addEventListener('mouseup', () => draggedNode = null);
+
+        function isPointNearSegment(p, a, b, threshold) {
+            const l2 = Math.hypot(a.x - b.x, a.y - b.y) ** 2;
+            if (l2 === 0) return Math.hypot(p.x - a.x, p.y - a.y) <= threshold;
+            let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            const projX = a.x + t * (b.x - a.x);
+            const projY = a.y + t * (b.y - a.y);
+            return Math.hypot(p.x - projX, p.y - projY) <= threshold;
+        }
+
+        function draw(highlightEdge = null, mstEdgeSet = new Set(), rejectedEdges = new Set()) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw Edges
+            edges.forEach(e => {
+                const isMST = mstEdgeSet.has(e.id);
+                const isCurrent = highlightEdge && highlightEdge.id === e.id;
+                const isRejected = rejectedEdges.has(e.id);
+
+                ctx.beginPath();
+                ctx.moveTo(e.u.x, e.u.y);
+                ctx.lineTo(e.v.x, e.v.y);
+
+                if (isCurrent) {
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.lineWidth = 5;
+                } else if (isMST) {
+                    ctx.strokeStyle = '#34d399';
+                    ctx.lineWidth = 4;
+                } else if (isRejected) {
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 1.5;
+                } else {
+                    ctx.strokeStyle = '#64748b';
+                    ctx.lineWidth = 2;
+                }
+                ctx.stroke();
+
+                const midX = (e.u.x + e.v.x) / 2;
+                const midY = (e.u.y + e.v.y) / 2;
+
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(midX, midY, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = isMST ? '#34d399' : (isCurrent ? '#f59e0b' : '#475569');
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.fillStyle = isMST ? '#34d399' : (isCurrent ? '#f59e0b' : '#94a3b8');
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${e.weight}m`, midX, midY);
+            });
+
+            // 2. Draw Nodes
+            nodes.forEach(n => {
+                const isSelected = selectedNodeForEdge && selectedNodeForEdge.id === n.id;
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
+                ctx.fillStyle = isSelected ? '#818cf8' : '#4f46e5';
+                ctx.fill();
+                ctx.strokeStyle = isSelected ? '#ffffff' : '#c7d2fe';
+                ctx.lineWidth = isSelected ? 3 : 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(n.name, n.x, n.y);
+            });
+        }
+
+        function generateRandomGraph(count) {
+            resetSimulation();
+            nodes = [];
+            edges = [];
+            const padding = 80;
+            const w = canvas.width - padding * 2;
+            const h = canvas.height - padding * 2;
+
+            for (let i = 0; i < count; i++) {
+                const name = String.fromCharCode(65 + i);
+                const x = Math.floor(padding + Math.random() * w);
+                const y = Math.floor(padding + Math.random() * h);
+                nodes.push({ id: Date.now() + i, name, x, y });
+            }
+
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+                    if (dist < 230 || Math.random() < 0.25) {
+                        const weight = Math.round(dist / 5);
+                        edges.push({ id: Date.now() + i * 100 + j, u: nodes[i], v: nodes[j], weight });
+                    }
+                }
+            }
+            updateStats();
+            draw();
+        }
+
+        function clearGraph() {
+            resetSimulation();
+            nodes = [];
+            edges = [];
+            updateStats();
+            draw();
+        }
+
+        function updateStats(mstEdgesCount = 0, mstCost = 0) {
+            document.getElementById('stat-nodes').innerText = nodes.length;
+            document.getElementById('stat-edges').innerText = edges.length;
+            document.getElementById('stat-mst-edges').innerText = mstEdgesCount;
+            document.getElementById('stat-mst-cost').innerText = `${mstCost} m`;
+            document.getElementById('stat-mst-price').innerText = `$${mstCost * 2}`;
+        }
+
+        function exportGraphJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ nodes, edges }, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "mst_network_topology.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Kruskal Steps Builder
+        function buildKruskalSteps() {
+            const steps = [];
+            const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
+            const parent = {};
+            nodes.forEach(n => parent[n.id] = n.id);
+
+            function find(i) {
+                if (parent[i] === i) return i;
+                return parent[i] = find(parent[i]);
+            }
+
+            function union(i, j) {
+                const rootI = find(i);
+                const rootJ = find(j);
+                if (rootI !== rootJ) {
+                    parent[rootI] = rootJ;
+                    return true;
+                }
+                return false;
+            }
+
+            const mst = [];
+            const rejected = [];
+            let totalCost = 0;
+
+            steps.push({
+                log: "Kruskal algoritmi boshlandi: Kabellar og'irligi bo'yicha saralandi.",
+                currentEdge: null, mstEdges: [], rejectedEdges: [], cost: 0
+            });
+
+            for (let edge of sortedEdges) {
+                const rootU = find(edge.u.id);
+                const rootV = find(edge.v.id);
+
+                if (rootU !== rootV) {
+                    union(edge.u.id, edge.v.id);
+                    mst.push(edge);
+                    totalCost += edge.weight;
+                    steps.push({
+                        log: `Qirra (${edge.u.name} - ${edge.v.name}, ${edge.weight}m) tekshirildi: Sikl hosil qilmaydi. MST ga qo'shildi!`,
+                        currentEdge: edge, mstEdges: [...mst], rejectedEdges: [...rejected], cost: totalCost
+                    });
+                } else {
+                    rejected.push(edge);
+                    steps.push({
+                        log: `Qirra (${edge.u.name} - ${edge.v.name}, ${edge.weight}m) rad etildi: Sikl (yopiq tuyoq) hosil qiladi.`,
+                        currentEdge: edge, mstEdges: [...mst], rejectedEdges: [...rejected], cost: totalCost
+                    });
+                }
+                if (mst.length === nodes.length - 1) break;
+            }
+
+            steps.push({
+                log: `Kruskal algoritmi yakunlandi! Umumiytabel uzunligi: ${totalCost} m.`,
+                currentEdge: null, mstEdges: [...mst], rejectedEdges: [...rejected], cost: totalCost
+            });
+            return steps;
+        }
+
+        // Prim Steps Builder
+        function buildPrimSteps() {
+            const steps = [];
+            if (nodes.length === 0) return steps;
+
+            const visited = new Set();
+            const mst = [];
+            const rejected = [];
+            let totalCost = 0;
+
+            const startNode = nodes[0];
+            visited.add(startNode.id);
+
+            steps.push({
+                log: `Prim algoritmi boshlandi: Boshlang'ich tugun -> ${startNode.name}.`,
+                currentEdge: null, mstEdges: [], rejectedEdges: [], cost: 0
+            });
+
+            while (visited.size < nodes.length) {
+                let minEdge = null;
+                let minWeight = Infinity;
+
+                for (let edge of edges) {
+                    const uVisited = visited.has(edge.u.id);
+                    const vVisited = visited.has(edge.v.id);
+                    if ((uVisited && !vVisited) || (!uVisited && vVisited)) {
+                        if (edge.weight < minWeight) {
+                            minWeight = edge.weight;
+                            minEdge = edge;
+                        }
+                    }
+                }
+
+                if (!minEdge) break;
+
+                const nextNodeId = visited.has(minEdge.u.id) ? minEdge.v.id : minEdge.u.id;
+                const nextNode = nodes.find(n => n.id === nextNodeId);
+
+                visited.add(nextNodeId);
+                mst.push(minEdge);
+                totalCost += minEdge.weight;
+
+                steps.push({
+                    log: `Minimal qirra (${minEdge.u.name} - ${minEdge.v.name}, ${minEdge.weight}m) tanlandi. ${nextNode.name} tuguni daraxtga qo'shildi.`,
+                    currentEdge: minEdge, mstEdges: [...mst], rejectedEdges: [...rejected], cost: totalCost
+                });
+            }
+
+            steps.push({
+                log: `Prim algoritmi yakunlandi! Umumiy kabel uzunligi: ${totalCost} m.`,
+                currentEdge: null, mstEdges: [...mst], rejectedEdges: [...rejected], cost: totalCost
+            });
+            return steps;
+        }
+
+        function runSimulation() {
+            if (isAnimating && !isPaused) return;
+            if (nodes.length < 2) {
+                alert("Iltimos, kamida 2 ta tugun yarating!");
+                return;
+            }
+
+            if (currentStepIndex === -1 || currentStepIndex >= animationSteps.length - 1) {
+                const algo = document.getElementById('algorithm-select').value;
+                animationSteps = algo === 'kruskal' ? buildKruskalSteps() : buildPrimSteps();
+                currentStepIndex = 0;
+                document.getElementById('log-container').innerHTML = '';
+            }
+
+            isAnimating = true;
+            isPaused = false;
+            executeStep();
+        }
+
+        function pauseSimulation() {
+            isPaused = true;
+            clearTimeout(animationTimer);
+        }
+
+        function stepNext() {
+            if (animationSteps.length === 0 || currentStepIndex >= animationSteps.length) {
+                const algo = document.getElementById('algorithm-select').value;
+                animationSteps = algo === 'kruskal' ? buildKruskalSteps() : buildPrimSteps();
+                currentStepIndex = 0;
+                document.getElementById('log-container').innerHTML = '';
+            }
+            pauseSimulation();
+            renderStep(currentStepIndex);
+            currentStepIndex++;
+        }
+
+        function executeStep() {
+            if (isPaused || currentStepIndex >= animationSteps.length) {
+                if (currentStepIndex >= animationSteps.length) isAnimating = false;
+                return;
+            }
+
+            renderStep(currentStepIndex);
+            currentStepIndex++;
+
+            const speedVal = parseInt(document.getElementById('speed-range').value);
+            speed = 1400 / speedVal;
+            animationTimer = setTimeout(executeStep, speed);
+        }
+
+        function renderStep(idx) {
+            if (idx < 0 || idx >= animationSteps.length) return;
+
+            const step = animationSteps[idx];
+            const logContainer = document.getElementById('log-container');
+            const p = document.createElement('p');
+            p.className = "leading-relaxed border-l-2 border-indigo-500 pl-2 py-0.5 text-slate-200";
+            p.innerText = `[${idx + 1}] ${step.log}`;
+            logContainer.appendChild(p);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            document.getElementById('step-counter').innerText = `Qadam: ${idx + 1}/${animationSteps.length}`;
+            updateStats(step.mstEdges.length, step.cost);
+
+            const mstSet = new Set(step.mstEdges.map(e => e.id));
+            const rejSet = new Set(step.rejectedEdges.map(e => e.id));
+            draw(step.currentEdge, mstSet, rejSet);
+        }
+
+        function resetSimulation() {
+            clearTimeout(animationTimer);
+            isAnimating = false;
+            isPaused = false;
+            currentStepIndex = -1;
+            animationSteps = [];
+            document.getElementById('log-container').innerHTML = '<p class="text-slate-500 italic">Dastur ishga tushishga tayyor. Graflarni hosil qiling va "Boshlash" tugmasini bosing...</p>';
+            document.getElementById('step-counter').innerText = "Qadam: 0/0";
+            updateStats(0, 0);
+            draw();
+        }
+
+        document.getElementById('speed-range').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('speed-label').innerText = `${val}x`;
+        });
+
+        // App Initialization
+        resizeCanvas();
+        generateRandomGraph(6);
+    </script>
+</body>
+</html>
